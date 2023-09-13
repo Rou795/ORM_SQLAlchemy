@@ -21,7 +21,7 @@ with open('tests_data.json') as f:
     data = json.load(f)
 
 import_data(session, data)
-#publisher = input()
-sales_pub(session, 'Microsoft Press')
+publisher = input()
+sales_pub(session, publisher)
 
 session.close()

@@ -75,22 +75,20 @@ def create_tables(engine):
     Base.metadata.drop_all(engine)
     Base.metadata.create_all(engine)
 
-def sales_pub(session, name: str):
-    book = session.query(Publisher.name, Book.id,
-                         Book.title).join(Book.publisher).filter(Publisher.name == name).subquery()
-    st_book = session.query(Stock.id, Stock.id_shop,
-                            book.c.title, book.c.name).join(book,
-                                                            Stock.id_book == book.c.id).subquery()
-    sa_st_book = session.query(st_book.c.title, st_book.c.id_shop,
-                               Sale.count, Sale.price, Sale.date_sale).join(st_book,
-                                                                            Sale.id_stock == st_book.c.id).subquery()
-    sh_sa_st_book = session.query(sa_st_book.c.title, Shop.name, (sa_st_book.c.count * sa_st_book.c.price)
-                                  , sa_st_book.c.date_sale).join(sa_st_book, Shop.id == sa_st_book.c.id_shop)
+def sales_pub(session, row: str):
+    book = session.query(Publisher.name, Publisher.id, Book.title, Shop.name, (Sale.count * Sale.price),
+                         Sale.date_sale).select_from(Shop).join(Stock).join(Book).join(Publisher).join(Sale)
 
-    for sale in sh_sa_st_book.all():
-        row = sale[0] + ' | '
-        row += sale[1] + ' | '
-        row += str(sale[2]) + ' | '
-        row += str(sale[3])
+    if row.strip().isdigit():
+        lines = book.filter(Publisher.id == int(row.strip())).all()
+    else:
+        lines = book.filter(Publisher.name == row.strip()).all()
+    row = ''
+
+    for line in lines:
+        row += line[2] + ' | '
+        row += line[3] + ' | '
+        row += str(line[4]) + ' | '
+        row += str(line[5])
         print(row)
 
